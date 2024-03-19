@@ -1,0 +1,34 @@
+<div class="w-full h-full flex flex-col items-center justify-center">
+   <h1 class="text-lg font-bold mb-4">Click to edit example</h1>
+   <div id="content">
+      <hx-partial route="/click-to-edit?edit" method="get|post" hx-only="true">
+         <form class="space-y-4" hx-post="/click-to-edit?edit" hx-target="this" hx-swap="outerHTML">
+            <div>
+               <label>First Name</label>
+               <input class="control" type="text" name="firstName" value="Joe">
+            </div>
+            <div class="form-group">
+               <label>Last Name</label>
+               <input class="control" type="text" name="lastName" value="Blow">
+            </div>
+            <div class="form-group">
+               <label>Email Address</label>
+               <input class="control" type="email" name="email" value="joe@blow.com">
+            </div>
+            <button class="btn">Submit</button>
+            <button class="btn" hx-get="/click-to-edit">Cancel</button>
+         </form>
+      </hx-partial>
+
+      <hx-partial route="/click-to-edit" method="get">
+         <div class="space-y-4">
+            <div><label>First Name</label>: Joe</div>
+            <div><label>Last Name</label>: Blow</div>
+            <div><label>Email</label>: joe@blow.com</div>
+            <button hx-get="/click-to-edit?edit" hx-target="#content" class="btn btn-primary">
+               Click To Edit
+            </button>
+         </div>
+      </hx-partial>
+   </div>
+</div>
