@@ -93,25 +93,20 @@ $executor->registerCommand('list:routes', function ($parameters) {
         if (!isset ($routeData[$route->getPattern()]['name'])) {
             $routeData[$route->getPattern()]['name'] = '';
         }
-
         $routeData[$route->getPattern()]['methods'] .= implode('|', $route->getMethods()) . '|';
         $routeData[$route->getPattern()]['name'] = $route->getName() ?? '';
-    }
-    
-    $routeLines = [];
-    foreach ($routeData as $path => $route) {
-        $routeLines[] = (color($path, 'green'). ' - ' . rtrim($route['methods'], '|') . (empty($route['name'])? '': " (" . color($route['name'], 'blue') . ")"));
-    }
-    
-    if(!isset($parameters['unsorted'])){
-        sort($routeLines);
+        $routeData[$route->getPattern()]['callable'] = $route->getCallable();
     }
     
     println("");
     println("Available Routes:");
-    foreach($routeLines as $line){
-        println("  • " . $line);
-    }
+    foreach ($routeData as $path => $route) {
+        println(color("Controller => ", "white")  . color($route['callable'], 'green'));
+        println(color(" • Path => ", "white")  . $path);
+        println(color(" • Methods => ", "white")  . color(rtrim($route['methods'], "|"), 'yellow'));
+        println(color(" • Route Name => ", "white") . $route['name']);   
+        println("");
+    }    
 });
 
 if ($argc <= 1) {
