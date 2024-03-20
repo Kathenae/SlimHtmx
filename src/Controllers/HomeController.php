@@ -2,7 +2,7 @@
 
 namespace App\Controllers;
 
-use App\Route;
+use App\Classes\Route;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;

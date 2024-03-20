@@ -27,7 +27,7 @@ class HtmxRenderer extends PhpRenderer
    {
       extract($data);
       $markup = file_get_contents($template);
-      $markup = $this->asHtmx($markup);
+      $markup = $this->asPartial($markup);
       $markup = $this->stripHx($markup);
       $markup = $this->withCustomExpressions($markup);
       eval ("?>" . $markup);
@@ -50,52 +50,67 @@ class HtmxRenderer extends PhpRenderer
          return "<?= $expression ?>";
       }, $extendedHtml);
 
-      // isset start
-      $pattern = '/{{isset\s(\$.*)\s?}}/';
-      $extendedHtml = preg_replace_callback($pattern, function ($matches) {
-         $expression = $matches[1];
-         return "<?php if(isset($expression)): ?>";
-      }, $extendedHtml);
-
-      // isset end
-      $pattern = '/{{\/isset\s?}}/';
-      $extendedHtml = preg_replace_callback($pattern, function ($matches) {
-         return "<?php endif; ?>";
-      }, $extendedHtml);
-
       return $extendedHtml;
    }
 
-   /**
-    * Returns the given html as a htmx content based
-    */
-    public function asHtmx(string $extendedHtml)
-    {
-       $extendedHtml = $this->hxPartial($extendedHtml);
-       return $extendedHtml;
-    }
-
-   private function hxPartial(string $extendedHtml)
+   private function asPartial(string $inputHtml)
    {
-      $dom = $this->makeDom($extendedHtml);
+      $dom = $this->makeDom($inputHtml);
       $elements = $dom->getElementsByTagName('hx-partial');
+      $outputHtml = $inputHtml;
       
-      foreach ($elements as $hxElement) {
-         if ($this->isHxRequest() && $this->routeMatches($hxElement) && $this->methodMatches($hxElement)) {
-            $extendedHtml = $this->innerHtml($dom, $hxElement);
-            $this->partialLoaded = true;
-            return $extendedHtml;
-         } else if ($hxElement->getAttribute('hx-only') === "true") {
-            $html = $this->innerHtml($dom, $hxElement);
-            $extendedHtml = str_replace($html, "", $extendedHtml);
+      foreach ($elements as $i => $hxElement) {
+         if ($this->routeMatches($hxElement) && $this->methodMatches($hxElement)) {
+            if ($this->isHxRequest()) {
+               $this->partialLoaded = true;
+               return $this->getHxPartialContent($i, $inputHtml);
+            }
+         } else {
+            $subHtmx = $this->getHxPartialContent($i, $inputHtml, true);
+            $outputHtml = str_replace($subHtmx, "", $outputHtml);
          }
       }
 
-      return $extendedHtml;
+      return $outputHtml;
    }
+   
+   private static function getHxPartialContent(int $tagGroupIndex, string $extendedHtml, bool $withEnclosingTags = false){
+      $matches = [];
+      preg_match_all("/<hx-partial.*>/", $extendedHtml, $matches, PREG_OFFSET_CAPTURE);
+      $matches = $matches[0];
+      $startTag = $matches[$tagGroupIndex][0];
+      $startTagOffset = $matches[$tagGroupIndex][1];
+      preg_match_all("/<\/hx-partial.*>/", $extendedHtml, $matches, PREG_OFFSET_CAPTURE);
+      $matches = $matches[0];
+      $endTag = $matches[$tagGroupIndex][0];
+      $endTagOffset = $matches[$tagGroupIndex][1];
+      
+      if(!$withEnclosingTags){
+         $startTagOffset += strlen($startTag);
+         $endTagOffset -= $startTagOffset;
+      }
+      else {
+         $endTagOffset -= $startTagOffset;
+         $endTagOffset += strlen($endTag);
+      }
+      return substr($extendedHtml, $startTagOffset, $endTagOffset);
+   }
+   
+   function strpos_all(string $haystack, string $needle, int $target) {
+      $positions = array();
+      $offset = 0;
+      
+      while (($pos = strpos($haystack, $needle, $offset)) !== false) {
+          $positions[] = $pos;
+          $offset = $pos + strlen($needle);
+      }
+      
+      return $positions[$target];
+  }
          
    private function routeMatches(DOMElement $hxElement){
-      return $hxElement->getAttribute('route') === $this->requestUri();
+      $paths = explode('||', $hxElement->getAttribute('route'));      
+      return in_array($this->requestUri(), $paths);
    }
    
    private function methodMatches(DOMElement $hxElement){
@@ -133,7 +148,7 @@ class HtmxRenderer extends PhpRenderer
     private function stripHx(string $extendedHtml)
     {
   
-       $hxTags = ['hx-partial', 'hx-if', 'hx-match', 'hx-else'];
+       $hxTags = ['hx-partial'];
        foreach ($hxTags as $hxTag) {
          $pattern = "/<\/?$hxTag?.+\/?>/";
          $extendedHtml = preg_replace($pattern, "", $extendedHtml);

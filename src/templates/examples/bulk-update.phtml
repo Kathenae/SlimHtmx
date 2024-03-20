@@ -1,5 +1,5 @@
 <div class="w-full h-full flex flex-col items-center justify-center">
-   <form id="checked-contancts" hx-post="/users" hx-target="#toast" hx-swap="outerHTML">
+   <form id="checked-contancts" hx-post="/users" hx-target="#toast">
       <table class="mb-4">
          <thead>
             <tr> 
@@ -20,12 +20,14 @@
       </table>
       
       <button class="btn" type="submit">Bulk Edit</button>
-      <hx-partial route="/users" method="post">
-         <span id="toast" class="'px-2 py-2 bg-green-300 rounded-md text-green-600 animate-fade-in-out">
-            {{isset $message }}
-               {{ $message }}
-            {{/isset}}
-         </span>
-      </hx-partial>
+      <span id="toast">
+         <hx-partial route="/users" method="post">
+            <?php if(isset($message)): ?>
+               <span class="'px-2 py-2 bg-green-300 rounded-md text-green-600 animate-fade-in-out">
+                  {{ $message }}
+               </span>
+            <?php endif ?>
+         </hx-partial>
+      </span>
    </form>
 </div>

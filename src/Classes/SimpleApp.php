@@ -1,11 +1,10 @@
 <?php
 
-namespace App;
+namespace App\Classes;
 
 use App\Classes\HtmxRenderer;
 use Psr\Http\Message\ResponseInterface;
 use Slim\App as SlimApp;
-use App\Routes;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use Psr\Container\ContainerInterface;
@@ -16,8 +15,8 @@ use PDO;
 class SimpleApp
 {
    public static $app;
-   private static $request;
-   private static $response;
+   private static Request $request;
+   private static Response $response;
    
    public static function init()
    {
@@ -78,22 +77,11 @@ class SimpleApp
    }
    
    public static function isHxRequest(){
-      return self::getRequest()->hasHeader('HX-REQUEST');
-   }
-   
-   public static function hasAnyQueryParams(array $params)
-   {
-      $requestQueryParams = self::getRequest()->getQueryParams();
-      foreach ($requestQueryParams as $param => $value) {
-         if (in_array($param, $params)) {
-            return true;
-         }
-      }
-      return false;
+      return self::$request->hasHeader('HX-REQUEST');
    }
    
    public static function hasQueryParam(string $param){
-      $value = self::getRequest()->getQueryParam($param);
+      $value = self::$request->getQueryParam($param);
       return $value !== null;
    }
    
@@ -103,14 +91,6 @@ class SimpleApp
    
    public static function getRoutes(): array {
       return self::$app->getContainer()->router->getRoutes();
-   }
-   
-   private static function getRequest() : Request{
-      return self::$request;
-   }
-   
-   private static function getResponse() : Response{
-      return self::$response;
    }
    
    public static function render(ResponseInterface $response, string $template, array $data = []) : ResponseInterface{

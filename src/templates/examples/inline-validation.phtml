@@ -1,0 +1,62 @@
+<form method="post" action="/inline-validation" id="content"
+   class="bg-slate-50 flex flex-col items-center justify-center w-full h-full">
+   <h1 class="text-lg font-bold mb-4">Inline validation example</h1>
+   <div class="space-y-4">
+      <div>
+         <label for="email">Email</label>
+         <input 
+            hx-post="/inline-validation?hx-validate-email" 
+            hx-target="#email-error"
+            hx-trigger="input changed delay:300ms, email" 
+            class="control w-full"
+            type="email"
+            name="email" 
+            id="email" 
+            value="{{ $email }}" 
+         />
+         <div id="email-error">
+            <hx-partial route="/inline-validation?hx-validate-email||/inline-validation" method="post">
+               <?php if (!empty ($errors['email'])): ?>
+                  <span class="text-red-600 text-sm">
+                     {{ $errors['email'] }}
+                  </span>
+               <?php else: ?>
+                  <span class="text-green-500 text-sm">
+                     Email is valid
+                  </span>
+               <?php endif ?>
+            </hx-partial>
+         </div>
+      </div>
+
+      <div>
+         <label for="password">Password</label>
+         <input 
+            hx-post="/inline-validation?hx-validate-password"
+            hx-target="#password-error"
+            hx-trigger="input changed delay:300ms, password" 
+            class="control w-full" 
+            type="password"
+            name="password"
+            id="password"
+            value="{{ $password }}"
+         />
+         <div id="password-error">
+            <hx-partial route="/inline-validation?hx-validate-password||/inline-validation" method="post">
+               <?php if (!empty($errors['password'])): ?>
+                  <span class="text-red-600 text-sm">
+                     {{ $errors['password'] }}
+                  </span>
+               <?php else: ?>
+                  <span class="text-green-500 text-sm">
+                     Passwod is valid
+                  </span>
+               <?php endif ?>
+            </hx-partial>
+         </div>
+      </div>
+      <button class="btn">
+         Submit
+      </button>
+   </div>
+</form>
